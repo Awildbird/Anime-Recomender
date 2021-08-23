@@ -3,9 +3,15 @@ import webbrowser
 from Anime import Anime
 from Tag import Tag
 # Here we define our query as a multi-line string
+
+username = input("Please enter your aniList username ")
+tagDepth = int(input("Please enter how many tags deep the program should go "))
+showDepth =int(input("Please enter how many of your top shows you want counted "))
+recAmount =int(input("please enter the max number of recomendations you would like "))
+
 query = '''
 query ($name: String) { # Define which variables will be used in the query (id)
-  MediaListCollection (userName: $name, type: ANIME) { # Insert our variables into the query arguments (id)
+  MediaListCollection (userName: $name, type: ANIME, status: COMPLETED, sort: SCORE_DESC) { # Insert our variables into the query arguments (id)
     lists{
         entries{
             media{
@@ -25,8 +31,7 @@ query ($name: String) { # Define which variables will be used in the query (id)
 }
 '''
 
-username = input("Please enter your aniList username ")
-tagDepth = int(input("Please enter how many tags deep the program should go "))
+
 # Define our query variables and values that will be used in the query request
 variables = {
     'name': username
@@ -43,12 +48,21 @@ animes = []
 for x in resp:
     animes.append(Anime(x["media"]["title"]["english"] , x["media"]["tags"] , x["media"]["id"]))
 
-# print(animes[0])
+print(animes[0])
 
 tagList = {}
 fulltags = []
-for x in animes:
-    fulltags.extend(x.getTags())
+
+i = 0
+while i < showDepth:
+    if i >= len(animes):
+        break
+    fulltags.extend(animes[i].getTags())
+    print(animes[i].getEnglish())
+    i+=1
+
+
+
 for x in fulltags:
     if x.getName() in tagList.keys():
         tagList.update({x.getName() : tagList.get(x.getName()) + x.getRank()})
@@ -87,7 +101,7 @@ variables2={
 response2 = requests.post(url, json={'query': query2, 'variables': variables2})
 resp2 = response2.json()
 resp2 = resp2['data']['Page']['media']
-print(resp2)
+# print(resp2)
 
 recAnime = []
 for x in resp2:
@@ -102,6 +116,11 @@ while i >= 0:
             recAnime.pop(i)
             break
     i -= 1
-print(recAnime[0])
 
-webbrowser.open("http://anilist.co/anime/" + recAnime[0].getId().__str__())
+i=0
+while i < recAmount:
+    if i >= len(recAnime):
+        break
+    webbrowser.open("http://anilist.co/anime/" + recAnime[i].getId().__str__())
+    print(recAnime[i])
+    i+=1
