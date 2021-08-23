@@ -1,4 +1,5 @@
 import requests
+import webbrowser
 from Anime import Anime
 from Tag import Tag
 # Here we define our query as a multi-line string
@@ -24,9 +25,11 @@ query ($name: String) { # Define which variables will be used in the query (id)
 }
 '''
 
+username = input("Please enter your aniList username ")
+tagDepth = int(input("Please enter how many tags deep the program should go "))
 # Define our query variables and values that will be used in the query request
 variables = {
-    'name': 'Awi1dbird'
+    'name': username
 }
 
 url = 'https://graphql.anilist.co/'
@@ -56,7 +59,7 @@ sortedTagList = sorted(tagList.items(),key=lambda x:x[1],reverse=True)
 
 i=0
 searchList=[]
-while i<4:
+while i<tagDepth:
     searchList.append(sortedTagList.pop(0)[0])
     i+=1
     
@@ -64,7 +67,7 @@ print(searchList)
 
 query2 = '''
 query($tags:[String]){
-  Page(page:1, perPage:15){
+  Page(page:1, perPage:30){
     media(tag_in: $tags sort:SCORE_DESC type:ANIME){
       title{
         english
@@ -91,3 +94,14 @@ for x in resp2:
     recAnime.append(Anime(x['title']['english'] , None , x['id']))
 
 print(recAnime[0])
+
+i = len(recAnime)-1 
+while i >= 0:
+    for x in animes:
+        if x.getEnglish() == recAnime[i].getEnglish():
+            recAnime.pop(i)
+            break
+    i -= 1
+print(recAnime[0])
+
+webbrowser.open("http://anilist.co/anime/" + recAnime[0].getId().__str__())
